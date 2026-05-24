@@ -2,35 +2,30 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة الموظفين الإلكترونية</title>
+    <title>بوابة الموظفين</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f4f8; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 400px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        .form-group { margin-bottom: 15px; text-align: right; }
-        input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        #portalSection { display: none; }
-        .data-item { background: #f8fafc; padding: 10px; margin-top: 10px; border-radius: 8px; text-align: right; }
+        body { font-family: sans-serif; background: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        #portalSection { display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="loginSection">
-        <h2>🔐 تسجيل دخول الموظفين</h2>
-        <div class="form-group"><label>كود الموظف:</label><input type="text" id="loginCode"></div>
-        <div class="form-group"><label>كلمة المرور:</label><input type="password" id="loginPassword"></div>
-        <button class="btn" onclick="loginEmployee()">دخول</button>
-        <div id="loginError" style="color:red; margin-top:10px;"></div>
+        <h2>تسجيل دخول الموظفين</h2>
+        <input type="text" id="loginCode" placeholder="كود الموظف">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور">
+        <button onclick="loginEmployee()">دخول</button>
     </div>
 
     <div id="portalSection">
         <h3>مرحباً: <span id="empName"></span></h3>
-        <div class="data-item">كود: <span id="res_code"></span></div>
-        <div class="data-item">الراتب: <span id="res_salary"></span></div>
-        <button class="btn" style="background:green;" onclick="window.print()">طباعة</button>
+        <p>الراتب: <span id="empSalary"></span></p>
+        <button onclick="location.reload()">خروج</button>
     </div>
 </div>
 
@@ -46,7 +41,7 @@
         const { data, error } = await supabase.from('employees').select('*').eq('كود', code);
 
         if (error || !data || data.length === 0) {
-            alert("خطأ في الكود");
+            alert("خطأ: الكود غير موجود.");
             return;
         }
 
@@ -55,10 +50,9 @@
             document.getElementById('loginSection').style.display = "none";
             document.getElementById('portalSection').style.display = "block";
             document.getElementById('empName').innerText = user['اسم الموظف'];
-            document.getElementById('res_code').innerText = user['كود'];
-            document.getElementById('res_salary').innerText = user['الراتب الشامل'];
+            document.getElementById('empSalary').innerText = user['الراتب الشامل'];
         } else {
-            alert("كلمة المرور غير صحيحة");
+            alert("خطأ: كلمة المرور غير صحيحة.");
         }
     }
 </script>
