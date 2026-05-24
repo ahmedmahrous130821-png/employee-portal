@@ -6,56 +6,47 @@
     <title>بوابة الموظفين الإلكترونية</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f4f8; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 600px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .login-box { text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f4f8; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 90%; max-width: 400px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         .form-group { margin-bottom: 15px; text-align: right; }
         input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .portal-area { display: none; }
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; text-align: right; }
-        .data-item { background: #f8fafc; padding: 10px; border-radius: 8px; }
-        .error-msg { color: red; margin-top: 10px; display: none; }
+        .btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #portalSection { display: none; }
+        .data-item { background: #f8fafc; padding: 10px; margin-top: 10px; border-radius: 8px; text-align: right; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="loginSection" class="login-box">
+    <div id="loginSection">
         <h2>🔐 تسجيل دخول الموظفين</h2>
         <div class="form-group"><label>كود الموظف:</label><input type="text" id="loginCode"></div>
         <div class="form-group"><label>كلمة المرور:</label><input type="password" id="loginPassword"></div>
         <button class="btn" onclick="loginEmployee()">دخول</button>
-        <div id="loginError" class="error-msg"></div>
+        <div id="loginError" style="color:red; margin-top:10px;"></div>
     </div>
 
-    <div id="portalSection" class="portal-area">
+    <div id="portalSection">
         <h3>مرحباً: <span id="empName"></span></h3>
-        <div id="printArea" class="data-grid">
-            <div class="data-item">كود: <span id="res_code"></span></div>
-            <div class="data-item">الراتب: <span id="res_salary"></span></div>
-        </div>
-        <button class="btn" style="margin-top:20px; background:green;" onclick="window.print()">طباعة</button>
+        <div class="data-item">كود: <span id="res_code"></span></div>
+        <div class="data-item">الراتب: <span id="res_salary"></span></div>
+        <button class="btn" style="background:green;" onclick="window.print()">طباعة</button>
     </div>
 </div>
 
 <script>
     const supabaseUrl = 'https://pvyqtvnyjeqtxfnenrog.supabase.co';
     const supabaseKey = 'sb_publishable_szYgsZqp9bytZY5bwObdFw_GQbTNvNB';
-    
-    // الاتصال المباشر
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function loginEmployee() {
         const code = document.getElementById('loginCode').value.trim();
         const pass = document.getElementById('loginPassword').value.trim();
-        const errorZone = document.getElementById('loginError');
-
+        
         const { data, error } = await supabase.from('employees').select('*').eq('كود', code);
 
         if (error || !data || data.length === 0) {
-            errorZone.innerText = "خطأ في الكود أو كلمة المرور";
-            errorZone.style.display = "block";
+            alert("خطأ في الكود");
             return;
         }
 
@@ -67,8 +58,7 @@
             document.getElementById('res_code').innerText = user['كود'];
             document.getElementById('res_salary').innerText = user['الراتب الشامل'];
         } else {
-            errorZone.innerText = "كلمة المرور غير صحيحة";
-            errorZone.style.display = "block";
+            alert("كلمة المرور غير صحيحة");
         }
     }
 </script>
