@@ -5,56 +5,31 @@
     <title>بوابة الموظفين</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        #portalSection { display: none; margin-top: 20px; }
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <div id="loginSection">
-        <h2>تسجيل دخول الموظفين</h2>
-        <input type="text" id="loginCode" placeholder="كود الموظف">
-        <input type="password" id="loginPassword" placeholder="كلمة المرور">
-        <button onclick="loginEmployee()">دخول</button>
+    <div class="container">
+        <h2>نظام الموظفين</h2>
+        <p id="status">جاري الاتصال بقاعدة البيانات...</p>
     </div>
 
-    <div id="portalSection">
-        <h3>مرحباً: <span id="empName"></span></h3>
-        <p>الراتب: <span id="empSalary"></span></p>
-        <button onclick="location.reload()">خروج</button>
-    </div>
-</div>
-
-<script>
-    const supabaseUrl = 'https://pvyqtvnyjeqtxfnenrog.supabase.co';
-    const supabaseKey = 'sb_publishable_szYgsZqp9bytZY5bwObdFw_GQbTNvNB';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-    async function loginEmployee() {
-        const code = document.getElementById('loginCode').value.trim();
-        const pass = document.getElementById('loginPassword').value.trim();
+    <script>
+        const supabaseUrl = 'https://pvyqtvnyjeqtxfnenrog.supabase.co';
+        const supabaseKey = 'sb_publishable_szYgsZqp9bytZY5bwObdFw_GQbTNvNB';
         
-        const { data, error } = await supabase.from('employees').select('*').eq('كود', code);
-
-        if (error || !data || data.length === 0) {
-            alert("خطأ: الكود غير موجود.");
-            return;
-        }
-
-        const user = data[0];
-        if (String(user['password'] || user['كلمة المرور']).trim() === pass) {
-            document.getElementById('loginSection').style.display = "none";
-            document.getElementById('portalSection').style.display = "block";
-            document.getElementById('empName').innerText = user['اسم الموظف'];
-            document.getElementById('empSalary').innerText = user['الراتب الشامل'];
-        } else {
-            alert("خطأ: كلمة المرور غير صحيحة.");
-        }
-    }
-</script>
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // التحقق من الاتصال
+        supabase.from('employees').select('count', { count: 'exact', head: true })
+            .then(({ count, error }) => {
+                if (error) {
+                    document.getElementById('status').innerText = "خطأ في الاتصال بالسيرفر.";
+                } else {
+                    document.getElementById('status').innerText = "تم الاتصال بنجاح! السيرفر جاهز للعمل.";
+                }
+            });
+    </script>
 </body>
 </html>
