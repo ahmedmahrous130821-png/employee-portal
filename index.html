@@ -3,36 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة الموظفين الإلكترونية - Supabase Portal</title>
-    
+    <title>بوابة الموظفين الإلكترونية</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f4f8; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 900px; margin: 20px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; }
-        .login-box { max-width: 400px; margin: 0 auto; padding: 20px; text-align: center; }
-        .login-box h2 { color: #0f172a; margin-bottom: 25px; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; text-align: right; }
-        label { font-weight: 700; color: #334155; font-size: 14px; }
-        input[type="text"], input[type="password"] { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; text-align: center; }
-        .btn { background: #0284c7; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; }
-        .btn:hover { background: #0369a1; }
-        .btn-danger { background: #dc2626; margin-top: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f4f8; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 90%; max-width: 600px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .login-box { text-align: center; }
+        .form-group { margin-bottom: 15px; text-align: right; }
+        input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .portal-area { display: none; }
-        .welcome-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
-        .tabs-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .tab-link { background: #e2e8f0; color: #475569; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .tab-link.active { background: #0284c7; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .data-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 5px; text-align: right; }
-        .data-label { font-size: 13px; font-weight: 600; color: #64748b; }
-        .data-value { font-size: 16px; font-weight: 700; color: #0f172a; }
-        .money-value { color: #16a34a; }
-        .error-msg { color: #dc2626; font-weight: bold; text-align: center; margin-top: 10px; display: none; background: #fef2f2; padding: 10px; border-radius: 6px; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; text-align: right; }
+        .data-item { background: #f8fafc; padding: 10px; border-radius: 8px; }
+        .error-msg { color: red; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -40,90 +23,54 @@
 <div class="container">
     <div id="loginSection" class="login-box">
         <h2>🔐 تسجيل دخول الموظفين</h2>
-        <div class="form-group"><label>كود الموظف:</label><input type="text" id="loginCode" placeholder="أدخل الكود"></div>
-        <div class="form-group"><label>كلمة المرور:</label><input type="password" id="loginPassword" placeholder="أدخل كلمة المرور"></div>
-        <button class="btn" onclick="loginEmployee()">🔓 دخول للنظام</button>
+        <div class="form-group"><label>كود الموظف:</label><input type="text" id="loginCode"></div>
+        <div class="form-group"><label>كلمة المرور:</label><input type="password" id="loginPassword"></div>
+        <button class="btn" onclick="loginEmployee()">دخول</button>
         <div id="loginError" class="error-msg"></div>
     </div>
 
     <div id="portalSection" class="portal-area">
-        <div class="welcome-header">
-            <div class="welcome-text">أهلاً بك: <span id="empWelcomeName" style="color:#0284c7;">-</span></div>
-            <button class="btn btn-danger" style="width:auto; padding: 8px 15px;" onclick="logout()">🚪 خروج</button>
+        <h3>مرحباً: <span id="empName"></span></h3>
+        <div id="printArea" class="data-grid">
+            <div class="data-item">كود: <span id="res_code"></span></div>
+            <div class="data-item">الراتب: <span id="res_salary"></span></div>
         </div>
-        <div class="tabs-nav">
-            <div class="tab-link active" onclick="switchTab('personalTab', this)">📊 الملف المالي والشخصي</div>
-            <div class="tab-link" onclick="switchTab('vacationTab', this)">🌴 قسم الإجازات</div>
-        </div>
-        
-        <div id="personalTab" class="tab-content active">
-            <button class="btn" style="width: auto; margin-bottom: 10px;" onclick="exportToPDF()">📄 تحميل المفردات PDF</button>
-            <div id="printArea" class="data-grid">
-                <div class="data-item"><span class="data-label">كود الموظف</span><span class="data-value" id="res_code">-</span></div>
-                <div class="data-item"><span class="data-label">اسم الموظف</span><span class="data-value" id="res_name">-</span></div>
-                <div class="data-item"><span class="data-label">الوظيفه</span><span class="data-value" id="res_job">-</span></div>
-                <div class="data-item"><span class="data-label">الراتب الشامل</span><span class="data-value money-value" id="res_total_salary">-</span></div>
-                <div class="data-item"><span class="data-label">صافي الراتب</span><span class="data-value money-value" id="res_net_salary">-</span></div>
-            </div>
-        </div>
-        
-        <div id="vacationTab" class="tab-content">
-            <div class="data-item" style="background: #eff6ff;"><span class="data-label">رصيد الإجازات المتبقي</span><span class="data-value" id="res_balance">0</span></div>
-        </div>
+        <button class="btn" style="margin-top:20px; background:green;" onclick="window.print()">طباعة</button>
     </div>
 </div>
 
 <script>
     const supabaseUrl = 'https://pvyqtvnyjeqtxfnenrog.supabase.co';
     const supabaseKey = 'sb_publishable_szYgsZqp9bytZY5bwObdFw_GQbTNvNB';
-    let client = null;
-    let loggedInUser = null;
-
-    function initSupabase() {
-        window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
-        client = window.supabase;
-        console.log("تم الاتصال بنجاح!");
-    }
-
-    initSupabase();
+    
+    // الاتصال المباشر
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     async function loginEmployee() {
-        if (!client) return alert("خطأ في الاتصال.");
-        const codeInput = document.getElementById('loginCode').value.trim();
-        const passwordInput = document.getElementById('loginPassword').value.trim();
-        const { data, error } = await client.from('employees').select('*').eq('كود', codeInput);
-        
-        if (error || !data || data.length === 0) return alert("بيانات الدخول غير صحيحة.");
-        
+        const code = document.getElementById('loginCode').value.trim();
+        const pass = document.getElementById('loginPassword').value.trim();
+        const errorZone = document.getElementById('loginError');
+
+        const { data, error } = await supabase.from('employees').select('*').eq('كود', code);
+
+        if (error || !data || data.length === 0) {
+            errorZone.innerText = "خطأ في الكود أو كلمة المرور";
+            errorZone.style.display = "block";
+            return;
+        }
+
         const user = data[0];
-        if (String(user['password'] || user['كلمة المرور']).trim() === passwordInput) {
-            loggedInUser = user;
-            showPortal();
+        if (String(user['password'] || user['كلمة المرور']).trim() === pass) {
+            document.getElementById('loginSection').style.display = "none";
+            document.getElementById('portalSection').style.display = "block";
+            document.getElementById('empName').innerText = user['اسم الموظف'];
+            document.getElementById('res_code').innerText = user['كود'];
+            document.getElementById('res_salary').innerText = user['الراتب الشامل'];
         } else {
-            alert("كلمة المرور غير صحيحة");
+            errorZone.innerText = "كلمة المرور غير صحيحة";
+            errorZone.style.display = "block";
         }
     }
-
-    function showPortal() {
-        document.getElementById('loginSection').style.display = "none";
-        document.getElementById('portalSection').style.display = "block";
-        document.getElementById('empWelcomeName').innerText = loggedInUser['اسم الموظف'];
-        document.getElementById('res_code').innerText = loggedInUser['كود'];
-        document.getElementById('res_name').innerText = loggedInUser['اسم الموظف'];
-        document.getElementById('res_job').innerText = loggedInUser['الوظيفه'];
-        document.getElementById('res_total_salary').innerText = loggedInUser['الراتب الشامل'];
-        document.getElementById('res_net_salary').innerText = loggedInUser['صافي الراتب'];
-        document.getElementById('res_balance').innerText = loggedInUser['الرصيد'] || 0;
-    }
-
-    function switchTab(tabId, element) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        element.classList.add('active');
-    }
-
-    function logout() { location.reload(); }
 </script>
 </body>
 </html>
