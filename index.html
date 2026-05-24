@@ -5,31 +5,23 @@
     <title>بوابة الموظفين</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; }
-        .container { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .message { color: #0284c7; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>نظام الموظفين</h2>
-        <p id="status">جاري الاتصال بقاعدة البيانات...</p>
-    </div>
+    <div class="message">جاري الاتصال بالنظام...</div>
 
     <script>
+        // إعدادات الاتصال الثابتة والمباشرة
         const supabaseUrl = 'https://pvyqtvnyjeqtxfnenrog.supabase.co';
         const supabaseKey = 'sb_publishable_szYgsZqp9bytZY5bwObdFw_GQbTNvNB';
         
+        // الاتصال المباشر بدون رسائل prompt
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        // التحقق من الاتصال
-        supabase.from('employees').select('count', { count: 'exact', head: true })
-            .then(({ count, error }) => {
-                if (error) {
-                    document.getElementById('status').innerText = "خطأ في الاتصال بالسيرفر.";
-                } else {
-                    document.getElementById('status').innerText = "تم الاتصال بنجاح! السيرفر جاهز للعمل.";
-                }
-            });
+        console.log("تم الاتصال بنجاح!");
+        document.querySelector('.message').innerText = "تم الاتصال بقاعدة البيانات بنجاح!";
     </script>
 </body>
 </html>
