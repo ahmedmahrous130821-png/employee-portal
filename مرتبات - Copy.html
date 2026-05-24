@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الموظفين الإلكترونية - Supabase Portal</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f4f8; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 900px; margin: 20px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; }
+        
+        /* شاشة تسجيل الدخول */
+        .login-box { max-width: 400px; margin: 0 auto; padding: 20px; text-align: center; }
+        .login-box h2 { color: #0f172a; margin-bottom: 25px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; text-align: right; }
+        label { font-weight: 700; color: #334155; font-size: 14px; }
+        input[type="text"], input[type="password"] { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; transition: all 0.3s; width: 100%; box-sizing: border-box; text-align: center; }
+        input:focus { border-color: #0284c7; outline: none; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+        
+        .btn { background: #0284c7; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; transition: background 0.2s; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:hover { background: #0369a1; }
+        .btn-danger { background: #dc2626; margin-top: 15px; }
+        .btn-danger:hover { background: #b91c1c; }
+        
+        /* لوحة البيانات بعد الدخول */
+        .portal-area { display: none; }
+        .welcome-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .welcome-text { font-size: 18px; font-weight: bold; color: #0f172a; }
+        
+        /* نظام التبويبات (Tabs) */
+        .tabs-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .tab-link { background: #e2e8f0; color: #475569; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .tab-link.active { background: #0284c7; color: white; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        
+        /* شبكة عرض البيانات */
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .data-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 5px; text-align: right; }
+        .data-label { font-size: 13px; font-weight: 600; color: #64748b; }
+        .data-value { font-size: 16px; font-weight: 700; color: #0f172a; word-break: break-word; }
+        .money-value { color: #16a34a; }
+        
+        .error-msg { color: #dc2626; font-weight: bold; text-align: center; margin-top: 10px; display: none; background: #fef2f2; padding: 10px; border-radius: 6px; border: 1px solid #fee2e2; }
+        .reset-config { font-size: 11px; text-align: center; margin-top: 20px; }
+        .reset-config a { color: #94a3b8; text-decoration: none; cursor: pointer; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="loginSection" class="login-box">
+        <h2>🔐 تسجيل دخول الموظفين</h2>
+        <div class="form-group">
+            <label>كود الموظف:</label>
+            <input type="text" id="loginCode" placeholder="أدخل الكود الخاص بك">
+        </div>
+        <div class="form-group">
+            <label>كلمة المرور:</label>
+            <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور">
+        </div>
+        <button class="btn" onclick="loginEmployee()">🔓 دخول للنظام</button>
+        <div id="loginError" class="error-msg"></div>
+        
+        <div class="reset-config"><a onclick="resetConnection()">⚙️ إعدادات السيرفر</a></div>
+    </div>
+
+    <div id="portalSection" class="portal-area">
+        <div class="welcome-header">
+            <div class="welcome-text">أهلاً بك: <span id="empWelcomeName" style="color:#0284c7;">-</span></div>
+            <button class="btn btn-danger" style="width:auto; padding: 8px 15px;" onclick="logout()">🚪 خروج</button>
+        </div>
+        
+        <div class="tabs-nav">
+            <div class="tab-link active" onclick="switchTab('personalTab', this)">📊 الملف المالي والشخصي</div>
+            <div class="tab-link" onclick="switchTab('vacationTab', this)">🌴 قسم الإجازات والطلبات</div>
+        </div>
+        
+        <div id="personalTab" class="tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #334155;">بيانات الموظف الحالية:</h3>
+                <button class="btn" style="width: auto; padding: 6px 12px; font-size: 13px;" onclick="exportToPDF()">📄 تحميل المفردات PDF</button>
+            </div>
+            
+            <div id="printArea" style="padding: 10px; background: white;">
+                <div class="data-grid">
+                    <div class="data-item"><span class="data-label">كود الموظف</span><span class="data-value" id="res_code">-</span></div>
+                    <div class="data-item"><span class="data-label">اسم الموظف</span><span class="data-value" id="res_name">-</span></div>
+                    <div class="data-item"><span class="data-label">الوظيفه</span><span class="data-value" id="res_job">-</span></div>
+                    <div class="data-item"><span class="data-label">تاريخ التعيين</span><span class="data-value" id="res_date">-</span></div>
+                    <div class="data-item"><span class="data-label">الراتب الشامل</span><span class="data-value money-value" id="res_total_salary">-</span></div>
+                    <div class="data-item"><span class="data-label">صافي الراتب</span><span class="data-value money-value" id="res_net_salary">-</span></div>
+                    <div class="data-item"><span class="data-label">التامينات</span><span class="data-value" id="res_insurance">-</span></div>
+                    <div class="data-item"><span class="data-label">الضرائب</span><span class="data-value" id="res_taxes">-</span></div>
+                    <div class="data-item"><span class="data-label">اضافي</span><span class="data-value" id="res_overtime">-</span></div>
+                    <div class="data-item"><span class="data-label">استقطاعات</span><span class="data-value" id="res_deductions">-</span></div>
+                    <div class="data-item"><span class="data-label">قيمه اليوم</span><span class="data-value money-value" id="res_day_value">-</span></div>
+                    <div class="data-item"><span class="data-label">راتب أساسي</span><span class="data-value money-value" id="res_base_salary">-</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="vacationTab" class="tab-content">
+            <h3 style="color: #334155; margin-bottom: 15px;">موقف الإجازات الخاص بك:</h3>
+            <div class="data-grid">
+                <div class="data-item" style="background: #eff6ff; border-color: #bfdbfe;">
+                    <span class="data-label" style="color: #1e40af;">رصيد الإجازات المتبقي</span>
+                    <span class="data-value" id="res_balance" style="font-size: 24px; color: #1e40af;">0</span>
+                </div>
+            </div>
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-top: 20px;">
+                <h4 style="margin-top: 0; color: #0f172a;">➕ تقديم طلب إجازة جديدة</h4>
+                <div class="form-group">
+                    <label>نوع الإجازة:</label>
+                    <input type="text" id="vacType" placeholder="مثال: اعتيادي، عارضة، مرضي">
+                </div>
+                <div class="form-group">
+                    <label>من تاريخ:</label>
+                    <input type="text" id="vacFrom" placeholder="DD/MM/YYYY">
+                </div>
+                <div class="form-group">
+                    <label>عدد الأيام المطلوبة:</label>
+                    <input type="text" id="vacDays" placeholder="اكتب عدد الأيام">
+                </div>
+                <button class="btn" style="background: #16a34a;" onclick="submitVacationRequest()">ارسال الطلب للإدارة</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let SUPABASE_URL = localStorage.getItem('supabase_url');
+    let SUPABASE_ANON_KEY = localStorage.getItem('supabase_key');
+    let client = null;
+    let loggedInUser = null;
+
+    function initSupabase() {
+        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+            SUPABASE_URL = prompt("الرجاء إدخال رابط مشروع Supabase (Project URL):");
+            SUPABASE_ANON_KEY = prompt("الرجاء إدخال مفتاح الـ API الخاص بمشروعك (Anon Key):");
+            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+                localStorage.setItem('supabase_url', SUPABASE_URL.trim().replace(/\/+$/, ""));
+                localStorage.setItem('supabase_key', SUPABASE_ANON_KEY.trim());
+                window.location.reload();
+            }
+        } else {
+            // استخدام الحروف الصغيرة للمكتبة v2 لضمان استقرار الاتصال التام
+            if (window.supabase) {
+                client = window.supabase.createClient(SUPABASE_URL.trim().replace(/\/+$/, ""), SUPABASE_ANON_KEY.trim());
+            }
+        }
+    }
+
+    window.onload = function() {
+        initSupabase();
+    };
+
+    function formatNumber(val) {
+        if (val === undefined || val === null || val === '') return '0';
+        if (!isNaN(val)) {
+            const num = parseFloat(val);
+            return num % 1 !== 0 ? num.toFixed(2) : num.toString();
+        }
+        return val;
+    }
+
+    // كود التحقق وتسجيل الدخول الذكي للـ 600 موظف
+    async function loginEmployee() {
+        if (!client) return alert("خطأ في الاتصال بالسيرفر، يرجى مراجعة الإعدادات.");
+        
+        const codeInput = document.getElementById('loginCode').value.trim();
+        const passwordInput = document.getElementById('loginPassword').value.trim();
+        const errorZone = document.getElementById('loginError');
+        
+        errorZone.style.display = "none";
+        
+        if (!codeInput || !passwordInput) {
+            errorZone.innerText = "برجاء إدخال الكود وبكلمة المرور معاً.";
+            errorZone.style.display = "block";
+            return;
+        }
+
+        // الاستعلام المباشر والأمن للبحث عن الموظف بالكود
+        const { data, error } = await client
+            .from('employees')
+            .select('*')
+            .eq('كود', parseInt(codeInput) || codeInput);
+
+        if (error) {
+            errorZone.innerText = "خطأ في جلب البيانات: " + error.message;
+            errorZone.style.display = "block";
+            return;
+        }
+
+        if (data && data.length > 0) {
+            const user = data[0];
+            
+            // مطابقة كلمة المرور المكتوبة مع العمود المسجل في السيرفر
+            // ملاحظة: إذا كان اسم العمود في Supabase مختلف، تأكد من تعديل كلمة 'password' بالأسفل
+            const dbPassword = user['password'] || user['كلمة المرور']; 
+            
+            if (String(dbPassword).trim() === passwordInput) {
+                loggedInUser = user;
+                showPortal();
+            } else {
+                errorZone.innerText = "كلمة المرور غير صحيحة، حاول مجدداً.";
+                errorZone.style.display = "block";
+            }
+        } else {
+            errorZone.innerText = "كود الموظف غير مسجل بالنظام.";
+            errorZone.style.display = "block";
+        }
+    }
+
+    function showPortal() {
+        document.getElementById('loginSection').style.display = "none";
+        document.getElementById('portalSection').style.display = "block";
+        
+        // تعبئة البيانات الشخصية في التبويب الأول
+        document.getElementById('empWelcomeName').innerText = loggedInUser['اسم الموظف'] || 'الموظف';
+        document.getElementById('res_code').innerText = loggedInUser['كود'] || '-';
+        document.getElementById('res_name').innerText = loggedInUser['اسم الموظف'] || '-';
+        document.getElementById('res_job').innerText = loggedInUser['الوظيفه'] || '-';
+        document.getElementById('res_date').innerText = loggedInUser['تاريخ التعيين'] || '-';
+        document.getElementById('res_total_salary').innerText = formatNumber(loggedInUser['الراتب الشامل']);
+        document.getElementById('res_net_salary').innerText = formatNumber(loggedInUser['صافي الراتب']);
+        document.getElementById('res_insurance').innerText = formatNumber(loggedInUser['التامينات']);
+        document.getElementById('res_taxes').innerText = formatNumber(loggedInUser['الضرائب']);
+        document.getElementById('res_overtime').innerText = formatNumber(loggedInUser['اضافي']);
+        document.getElementById('res_deductions').innerText = formatNumber(loggedInUser['استقطاعات']);
+        document.getElementById('res_day_value').innerText = formatNumber(loggedInUser['قيمه اليوم']);
+        document.getElementById('res_base_salary').innerText = formatNumber(loggedInUser['راتب']);
+        
+        // تعبئة رصيد الإجازات في التبويب الثاني
+        document.getElementById('res_balance').innerText = formatNumber(loggedInUser['الرصيد']);
+    }
+
+    // التنقل السلس بين التبويبات (Tabs)
+    function switchTab(tabId, element) {
+        const contents = document.getElementsByClassName('tab-content');
+        for (let content of contents) {
+            content.classList.remove('active');
+        }
+        const links = document.getElementsByClassName('tab-link');
+        for (let link of links) {
+            link.classList.remove('active');
+        }
+        document.getElementById(tabId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    function submitVacationRequest() {
+        const type = document.getElementById('vacType').value;
+        const from = document.getElementById('vacFrom').value;
+        const days = document.getElementById('vacDays').value;
+        
+        if(!type || !from || !days) return alert("برجاء ملء بيانات طلب الإجازة كاملة.");
+        
+        alert(`شكراً لك يا ${loggedInUser['اسم الموظف']}، تم إرسال طلبك بنجاح وسنقوم بربط جدول الطلبات لاحقاً بالسيرفر.`);
+    }
+
+    function logout() {
+        loggedInUser = null;
+        document.getElementById('loginCode').value = "";
+        document.getElementById('loginPassword').value = "";
+        document.getElementById('portalSection').style.display = "none";
+        document.getElementById('loginSection').style.display = "block";
+    }
+
+    function resetConnection() {
+        if(confirm("هل تريد مسح إعدادات الاتصال الحالية وإدخال روابط جديدة؟")) {
+            localStorage.removeItem('supabase_url');
+            localStorage.removeItem('supabase_key');
+            location.reload();
+        }
+    }
+
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('printArea');
+        
+        html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 190; 
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            pdf.save(`مفردات_مرتب_كود_${loggedInUser['كود']}.pdf`);
+        });
+    }
+</script>
+</body>
+</html>
