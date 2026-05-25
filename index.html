@@ -147,14 +147,21 @@
     let client = null;
     let loggedInUser = null;
 
-    function initSupabase() {
-        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-            SUPABASE_URL = prompt("الرجاء إدخال رابط مشروع Supabase (Project URL):");
-            SUPABASE_ANON_KEY = prompt("الرجاء إدخال مفتاح الـ API الخاص بمشروعك (Anon Key):");
-            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-                localStorage.setItem('supabase_url', SUPABASE_URL.trim().replace(/\/+$/, ""));
-                localStorage.setItem('supabase_key', SUPABASE_ANON_KEY.trim());
-                window.location.reload();
+   function initSupabase() {
+    // 1. ضع رابط مشروعك ومفتاحك مباشرة (بدون استخدام prompt)
+    SUPABASE_URL = "https://pvyqtvnyjeqtxfnenrog.supabase.co";
+    SUPABASE_ANON_KEY = "sb_publishable_szYgsZqp9bytZY5bwObdFw_GQbTNvNB";
+    
+    // 2. تخزين القيم في ذاكرة المتصفح
+    localStorage.setItem('supabase_url', SUPABASE_URL);
+    localStorage.setItem('supabase_key', SUPABASE_ANON_KEY);
+    
+    // 3. تهيئة الاتصال
+    if (window.supabase) {
+        client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        checkConnection(); // دالة للتأكد من نجاح الاتصال
+    }
+}
             }
         } else {
             // استخدام الحروف الصغيرة للمكتبة v2 لضمان استقرار الاتصال التام
